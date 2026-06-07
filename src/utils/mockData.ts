@@ -1,4 +1,4 @@
-import { Device, Room, Environment, HourlyEnergy } from '../types';
+import { Device, Room, Environment, HourlyEnergy, Scene } from '../types';
 
 const roomDevices: { room: Room; devices: Omit<Device, 'id' | 'room'>[] }[] = [
   {
@@ -78,4 +78,37 @@ export function generateDeviceEnergy(devices: Device[]): { name: string; value: 
       name: d.name,
       value: Math.round((d.power || 0) * (0.8 + Math.random() * 0.4)),
     }));
+}
+
+export function generatePresetScenes(): Scene[] {
+  return [
+    {
+      id: 'scene-leave',
+      name: '离家模式',
+      icon: 'LogOut',
+      isPreset: true,
+      deviceStates: [
+        { id: 'dev-1', on: false },
+        { id: 'dev-2', on: false },
+        { id: 'dev-3', on: false },
+        { id: 'dev-7', on: false },
+        { id: 'dev-8', on: false },
+        { id: 'dev-9', on: false },
+        { id: 'dev-12', on: false },
+        { id: 'dev-15', on: false },
+        { id: 'dev-16', on: false },
+        { id: 'dev-17', on: false },
+      ],
+    },
+    {
+      id: 'scene-reading',
+      name: '阅读模式',
+      icon: 'BookOpen',
+      isPreset: true,
+      deviceStates: [
+        { id: 'dev-16', on: true, brightness: 30 },
+        { id: 'dev-15', on: true, brightness: 90 },
+      ],
+    },
+  ];
 }

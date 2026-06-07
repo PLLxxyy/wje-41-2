@@ -25,3 +25,19 @@ export interface HourlyEnergy {
   hour: string;
   kwh: number;
 }
+
+export interface DeviceState {
+  id: string;
+  on: boolean;
+  brightness?: number;
+  temperature?: number;
+  acMode?: ACMode;
+}
+
+export interface Scene {
+  id: string;
+  name: string;
+  icon: string;
+  deviceStates: DeviceState[];
+  isPreset?: boolean;
+}
