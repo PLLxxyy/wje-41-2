@@ -27,6 +27,7 @@ function App() {
     updateScene,
     deleteScene,
     captureCurrentState,
+    getSceneDeviceCount,
   } = useSmartHome(5000);
 
   return (
@@ -43,6 +44,7 @@ function App() {
           onAdd={addScene}
           onUpdate={updateScene}
           captureCurrentState={captureCurrentState}
+          getSceneDeviceCount={getSceneDeviceCount}
         />
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

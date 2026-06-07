@@ -15,13 +15,14 @@ const iconMap: Record<string, React.ElementType> = {
 
 interface Props {
   scene: Scene;
+  deviceCount: number;
   loading: boolean;
   onExecute: (id: string) => void;
   onEdit: (scene: Scene) => void;
   onDelete: (id: string) => void;
 }
 
-export default function SceneCard({ scene, loading, onExecute, onEdit, onDelete }: Props) {
+export default function SceneCard({ scene, deviceCount, loading, onExecute, onEdit, onDelete }: Props) {
   const Icon = iconMap[scene.icon] || Settings;
 
   return (
@@ -34,7 +35,7 @@ export default function SceneCard({ scene, loading, onExecute, onEdit, onDelete 
           <div>
             <div className="text-sm font-medium text-slate-200">{scene.name}</div>
             <div className="text-[10px] text-slate-500">
-              {scene.deviceStates.length} 个设备
+              {deviceCount} 个设备
             </div>
           </div>
         </div>

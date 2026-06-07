@@ -33,11 +33,18 @@ export default function SceneEditor({
   const [icon, setIcon] = useState('Home');
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
 
+  const isPreset = editScene?.isPreset;
+  const isEditingPreset = isPreset && editScene?.actions;
+
   useEffect(() => {
     if (editScene) {
       setName(editScene.name);
       setIcon(editScene.icon);
-      setSelectedDevices(editScene.deviceStates.map((s) => s.id));
+      if (editScene.deviceStates) {
+        setSelectedDevices(editScene.deviceStates.map((s) => s.id));
+      } else {
+        setSelectedDevices([]);
+      }
     } else {
       setName('');
       setIcon('Home');
@@ -46,8 +53,9 @@ export default function SceneEditor({
   }, [editScene, open]);
 
   const handleSave = () => {
-    if (!name.trim() || selectedDevices.length === 0) return;
-    const states = editScene
+    if (!name.trim()) return;
+    if (!isEditingPreset && selectedDevices.length === 0) return;
+    const states = editScene?.deviceStates
       ? editScene.deviceStates
       : captureCurrentState(selectedDevices);
     onSave(name.trim(), icon, states);
@@ -117,55 +125,66 @@ export default function SceneEditor({
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm text-slate-300">选择设备</label>
-              <div className="flex gap-2">
-                <button
-                  onClick={selectAll}
-                  className="text-xs text-blue-400 hover:text-blue-300"
-                >
-                  全选
-                </button>
-                <button
-                  onClick={clearAll}
-                  className="text-xs text-slate-400 hover:text-slate-300"
-                >
-                  清空
-                </button>
+          {!isEditingPreset && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm text-slate-300">选择设备</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={selectAll}
+                    className="text-xs text-blue-400 hover:text-blue-300"
+                  >
+                    全选
+                  </button>
+                  <button
+                    onClick={clearAll}
+                    className="text-xs text-slate-400 hover:text-slate-300"
+                  >
+                    清空
+                  </button>
+                </div>
+              </div>
+              <div className="text-[11px] text-slate-500 mb-2">
+                {!editScene && '将使用当前设备状态保存为场景配置'}
+                {editScene && '编辑后需重新保存设备状态'}
+              </div>
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {devices.map((device) => (
+                  <label
+                    key={device.id}
+                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
+                      !device.online ? 'opacity-50' : 'hover:bg-slate-700'
+                    } ${
+                      selectedDevices.includes(device.id)
+                        ? 'bg-blue-500/10'
+                        : ''
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedDevices.includes(device.id)}
+                      onChange={() => toggleDevice(device.id)}
+                      disabled={!device.online}
+                      className="w-4 h-4 rounded bg-slate-700 border-slate-600 text-blue-500 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-slate-200">{device.name}</span>
+                    <span className="text-xs text-slate-500 ml-auto">
+                      {device.online ? (device.on ? '开启' : '关闭') : '离线'}
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
-            <div className="text-[11px] text-slate-500 mb-2">
-              {!editScene && '将使用当前设备状态保存为场景配置'}
-              {editScene && '编辑后需重新保存设备状态'}
+          )}
+
+          {isEditingPreset && (
+            <div className="p-3 rounded-lg bg-slate-700/50 border border-slate-600">
+              <p className="text-sm text-slate-400">
+                预设场景使用动态设备匹配规则，设备选择不可编辑。
+                您可以修改场景名称和图标。
+              </p>
             </div>
-            <div className="space-y-1 max-h-48 overflow-y-auto">
-              {devices.map((device) => (
-                <label
-                  key={device.id}
-                  className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
-                    !device.online ? 'opacity-50' : 'hover:bg-slate-700'
-                  } ${
-                    selectedDevices.includes(device.id)
-                      ? 'bg-blue-500/10'
-                      : ''
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedDevices.includes(device.id)}
-                    onChange={() => toggleDevice(device.id)}
-                    disabled={!device.online}
-                    className="w-4 h-4 rounded bg-slate-700 border-slate-600 text-blue-500 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-slate-200">{device.name}</span>
-                  <span className="text-xs text-slate-500 ml-auto">
-                    {device.online ? (device.on ? '开启' : '关闭') : '离线'}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="flex gap-3 p-4 border-t border-slate-700">
@@ -177,7 +196,7 @@ export default function SceneEditor({
           </button>
           <button
             onClick={handleSave}
-            disabled={!name.trim() || selectedDevices.length === 0}
+            disabled={!name.trim() || (!isEditingPreset && selectedDevices.length === 0)}
             className="flex-1 py-2 px-4 rounded-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             <Check className="w-4 h-4" />

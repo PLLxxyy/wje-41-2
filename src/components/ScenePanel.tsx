@@ -13,6 +13,7 @@ interface Props {
   onAdd: (name: string, icon: string, states: DeviceState[]) => void;
   onUpdate: (id: string, updates: Partial<Scene>) => void;
   captureCurrentState: (ids: string[]) => DeviceState[];
+  getSceneDeviceCount: (scene: Scene) => number;
 }
 
 export default function ScenePanel({
@@ -24,6 +25,7 @@ export default function ScenePanel({
   onAdd,
   onUpdate,
   captureCurrentState,
+  getSceneDeviceCount,
 }: Props) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingScene, setEditingScene] = useState<Scene | null>(null);
@@ -67,6 +69,7 @@ export default function ScenePanel({
           <SceneCard
             key={scene.id}
             scene={scene}
+            deviceCount={getSceneDeviceCount(scene)}
             loading={loadingId === scene.id}
             onExecute={onExecute}
             onEdit={handleEdit}

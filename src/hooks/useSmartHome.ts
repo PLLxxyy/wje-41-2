@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Device, Room, Environment, HourlyEnergy, Scene, DeviceState } from '../types';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Device, Room, Environment, HourlyEnergy, Scene, DeviceState, SceneAction, DeviceStateOverride } from '../types';
 import {
   generateDevices,
   generateEnvironment,
@@ -19,6 +19,66 @@ export function useSmartHome(refreshInterval = 5000) {
   const [sceneLoading, setSceneLoading] = useState<string | null>(null);
 
   const roomDevices = devices.filter((d) => d.room === currentRoom);
+
+  const matchDevice = useCallback((device: Device, action: SceneAction): boolean => {
+    if (action.type && device.type !== action.type) return false;
+    if (action.room && device.room !== action.room) return false;
+    if (action.name && !device.name.includes(action.name)) return false;
+    return true;
+  }, []);
+
+  const applyActionToDevice = useCallback((device: Device, state: DeviceStateOverride): Device => {
+    const updated: Device = { ...device };
+    if (state.on !== undefined) updated.on = state.on;
+    if (state.brightness !== undefined && device.type === 'light') {
+      updated.brightness = state.brightness;
+    }
+    if (state.temperature !== undefined && device.type === 'ac') {
+      updated.temperature = state.temperature;
+    }
+    if (state.acMode !== undefined && device.type === 'ac') {
+      updated.acMode = state.acMode;
+    }
+    return updated;
+  }, []);
+
+  const getSceneDeviceCount = useCallback((scene: Scene): number => {
+    if (scene.deviceStates) return scene.deviceStates.length;
+    if (scene.actions) {
+      return devices.filter((d) =>
+        scene.actions!.some((action) => matchDevice(d, action))
+      ).length;
+    }
+    return 0;
+  }, [devices, matchDevice]);
+
+  const resolveSceneStates = useCallback((scene: Scene): Map<string, DeviceStateOverride> => {
+    const stateMap = new Map<string, DeviceStateOverride>();
+
+    if (scene.deviceStates) {
+      scene.deviceStates.forEach((ds) => {
+        stateMap.set(ds.id, {
+          on: ds.on,
+          brightness: ds.brightness,
+          temperature: ds.temperature,
+          acMode: ds.acMode,
+        });
+      });
+    }
+
+    if (scene.actions) {
+      scene.actions.forEach((action) => {
+        devices.forEach((device) => {
+          if (matchDevice(device, action)) {
+            const existing = stateMap.get(device.id) || {};
+            stateMap.set(device.id, { ...existing, ...action.state });
+          }
+        });
+      });
+    }
+
+    return stateMap;
+  }, [devices, matchDevice]);
 
   useEffect(() => {
     setDeviceEnergy(generateDeviceEnergy(devices));
@@ -53,21 +113,22 @@ export function useSmartHome(refreshInterval = 5000) {
     const scene = scenes.find((s) => s.id === sceneId);
     if (!scene) return;
 
-    setDevices((prev) => {
-      const updated = prev.map((d) => {
-        const state = scene.deviceStates.find((s) => s.id === d.id);
+    const stateMap = resolveSceneStates(scene);
+
+    setDevices((prev) =>
+      prev.map((d) => {
+        const state = stateMap.get(d.id);
         if (!state) return d;
-        return { ...d, ...state };
-      });
-      return updated;
-    });
+        return applyActionToDevice(d, state);
+      })
+    );
 
     setFeedback({ id: sceneId, msg: `${scene.name} 已执行` });
     setTimeout(() => {
       setSceneLoading(null);
       setFeedback((f) => (f?.id === sceneId ? null : f));
     }, 1000);
-  }, [scenes]);
+  }, [scenes, resolveSceneStates, applyActionToDevice]);
 
   const addScene = useCallback((name: string, icon: string, deviceStates: DeviceState[]) => {
     const newScene: Scene = {
@@ -146,5 +207,6 @@ export function useSmartHome(refreshInterval = 5000) {
     updateScene,
     deleteScene,
     captureCurrentState,
+    getSceneDeviceCount,
   };
 }

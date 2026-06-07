@@ -87,17 +87,9 @@ export function generatePresetScenes(): Scene[] {
       name: '离家模式',
       icon: 'LogOut',
       isPreset: true,
-      deviceStates: [
-        { id: 'dev-1', on: false },
-        { id: 'dev-2', on: false },
-        { id: 'dev-3', on: false },
-        { id: 'dev-7', on: false },
-        { id: 'dev-8', on: false },
-        { id: 'dev-9', on: false },
-        { id: 'dev-12', on: false },
-        { id: 'dev-15', on: false },
-        { id: 'dev-16', on: false },
-        { id: 'dev-17', on: false },
+      actions: [
+        { type: 'light', state: { on: false } },
+        { type: 'ac', state: { on: false } },
       ],
     },
     {
@@ -105,9 +97,9 @@ export function generatePresetScenes(): Scene[] {
       name: '阅读模式',
       icon: 'BookOpen',
       isPreset: true,
-      deviceStates: [
-        { id: 'dev-16', on: true, brightness: 30 },
-        { id: 'dev-15', on: true, brightness: 90 },
+      actions: [
+        { type: 'light', name: '台灯', state: { on: true, brightness: 90 } },
+        { type: 'light', room: 'study', name: '顶灯', state: { on: true, brightness: 30 } },
       ],
     },
   ];

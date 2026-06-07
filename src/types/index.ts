@@ -34,10 +34,25 @@ export interface DeviceState {
   acMode?: ACMode;
 }
 
+export interface DeviceStateOverride {
+  on?: boolean;
+  brightness?: number;
+  temperature?: number;
+  acMode?: ACMode;
+}
+
+export interface SceneAction {
+  type?: DeviceType;
+  room?: Room;
+  name?: string;
+  state: DeviceStateOverride;
+}
+
 export interface Scene {
   id: string;
   name: string;
   icon: string;
-  deviceStates: DeviceState[];
+  deviceStates?: DeviceState[];
+  actions?: SceneAction[];
   isPreset?: boolean;
 }
